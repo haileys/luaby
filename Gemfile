@@ -1,4 +1,5 @@
 source :rubygems
 
-gem "pry"
-gem "kpeg"
+group :development do
+  gem "pry"
+end

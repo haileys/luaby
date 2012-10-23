@@ -2,7 +2,6 @@ GEM
   remote: http://rubygems.org/
   specs:
     coderay (1.0.8)
-    kpeg (0.10.0)
     method_source (0.8.1)
     pry (0.9.10)
       coderay (~> 1.0.5)
@@ -14,5 +13,4 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  kpeg
   pry
