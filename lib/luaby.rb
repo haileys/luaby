@@ -1,5 +1,6 @@
 module Luaby
-  require "kpeg"
-  require "luaby/parser.kpeg"
+  require "luaby/syntax_error"
+  require "luaby/token"
+  require "luaby/lexer"
   require "luaby/ast"
 end
