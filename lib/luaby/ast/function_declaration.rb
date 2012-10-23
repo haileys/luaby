@@ -1,4 +1,4 @@
-class Luaby::AST::LocalFunction
+class Luaby::AST::FunctionDeclaration
   attr_reader :name, :params, :body
   
   def initialize(name, params, body)

@@ -1,13 +1,15 @@
 %% name = Luaby::Parser
 #%
 
-- = Whitespace
-  | Comment
+- = Whitespace*
+  | Comment*
 
-Whitespace = /\s*/ -
+Whitespace  = /[\t\v\f\n ]/ { nil }
 
-Comment = "--" (/[^\n]/) -
-        | "--[[" (/.*?\]\]--/) -
+Comment = "--" (/[^\n]/)
+        | "--[[" (/.*?\]\]--/)
+
+Shebang = "#!" (/.*?$/)
 
 StringCharacter = "\\a" { "\a" }
                 | "\\b" { "\b" }
@@ -30,60 +32,180 @@ DoubleQuotedStringCharacter = <StringCharacter> { text }
 SingleQuotedStringCharacter = <StringCharacter> { text }
                             | "\"" { text }
 
-String = "\"" <DoubleQuotedStringCharacter*:str> "\"" - { str }
-       | "'"  <SingleQuotedStringCharacter*:str> "'"  - { str }
+String        = "\"" <DoubleQuotedStringCharacter*:str> "\"" -  { str }
+              | "'"  <SingleQuotedStringCharacter*:str> "'" -   { str }
 
-Do          = "do" -
-End         = "end" -
-While       = "while" -
-Repeat      = "repeat" -
-Until       = "until" -
-If          = "if" -
-Then        = "then" -
-Else        = "else" -
-Elsif       = "elsif" -
-Equals      = "=" -
-Function    = "function" -
-Break       = "break" -
-Return      = "return" -
-Goto        = "goto" -
-Comma       = "," -
-Semicolon   = ";" -
-DoubleColon = "::" -
+Number        = <(/(0x[0-9a-f]+|[0-9]+(.[0-9]*)?(e[0-9]*)?)/i)> { text.to_f }
 
-Name = /[a-zA-Z_][a-zA-Z_0-9]*/ -
+Do                = "do" -
+End               = "end" -
+While             = "while" -
+Repeat            = "repeat" -
+Until             = "until" -
+If                = "if" -
+Then              = "then" -
+Else              = "else" -
+Elsif             = "elsif" -
+For               = "for" -
+In                = "in" -
+Function          = "function" -
+Break             = "break" -
+Return            = "return" -
+Goto              = "goto" -
+Local             = "local" -
+Nil               = "nil" -
+True              = "true" -
+False             = "false" -
+Or                = "or" -
+And               = "and" -
+Not               = "not" -
+Equals            = "=" -
+Count             = "#" -
+Plus              = "+" -
+Minus             = "-" -
+Times             = "*" -
+Divide            = "/" -
+Modulo            = "%" -
+Power             = "^" -
+Comma             = "," -
+Semicolon         = ";" -
+Colon             = ":" -
+TripleDot         = "..." -
+DoubleDot         = ".." -
+Dot               = "." -
+DoubleColon       = "::" -
+LeftParen         = "(" -
+RightParen        = ")" -
+LeftBrace         = "{" -
+RightBrace        = "}" -
+LeftBracket       = "[" -
+RightBracket      = "]" -
+LessThanEqual     = "<=" -
+LessThan          = "<" -
+GreaterThanEqual  = ">=" -
+GreaterThan       = ">" -
+NotEqual          = "~=" -
+DoubleEqual       = "==" -
 
-string_literal = <String:str> { Luaby::AST::StringLiteral.new str.compact.join }
+Keyword           = /do|end|while|repeat|until|if|then|else|elsif|for|in|function|break|return|goto|local|nil|true|false|or|and|not/
 
-var = <Name> { Luaby::AST::Variable.new text }
+Identifier        = <(/[a-zA-Z_][a-zA-Z_0-9]*/)> -        { text }
 
-stat_semi = <stat> ";"? { text }
+Name              = !(Keyword) Identifier:id              { id }
 
-chunk = stat_semi*:stats (laststat:laststat)?       { Luaby::AST::Block.new(laststat ? [*stats, laststat] : stats) }
+string_literal = <String:str>                             { Luaby::AST::StringLiteral.new str.compact.join }
 
-block = chunk
+chunk = block:block                                       { block }
 
-retstat = Return explist:explist Semicolon?         { Luaby::AST::Return.new explist }
+block = stat*:stats retstat:retstat                       { Luaby::AST::Block.new([*stats, retstat]) }
+      | stat*:stats                                       { Luaby::AST::Block.new(stats) }
 
-stat  = Semicolon                                   { nil }
-      | varlist:lvals Equals explist:rvals          { Luaby::AST::Assignment.new lvals, rvals }
-      | functioncall                                { @TODO }
-      | DoubleColon Name:name DoubleColon           { Luaby::AST::Label.new name }
-      | Break                                       { Luaby::AST::Break.new }
-      | Goto Name:name                              { Luaby::AST::Goto.new name }
-      | Do block:block End                          { Luaby::AST::Block.new block }
-      | While exp:exp Do block:block End            { Luaby::AST::While.new exp, block }
-      | Repeat block:block Until exp:exp            { Luaby::AST::Repeat.new block, exp }
-      | If exp:exp Then block:block End             { Luaby::AST::If.new exp, block }
+retstat = Return explist:explist Semicolon?               { Luaby::AST::Return.new explist }
+
+stat  = Semicolon                                         { nil }
+      | varlist:lvals Equals explist:rvals                { Luaby::AST::Assignment.new lvals, rvals }
+      | functioncall                                      { @TODO }
+      | DoubleColon Name:name DoubleColon                 { Luaby::AST::Label.new name }
+      | Break                                             { Luaby::AST::Break.new }
+      | Goto Name:name                                    { Luaby::AST::Goto.new name }
+      | Do block:block End                                { Luaby::AST::Block.new block }
+      | While exp:exp Do block:block End                  { Luaby::AST::While.new exp, block }
+      | Repeat block:block Until exp:exp                  { Luaby::AST::Repeat.new block, exp }
+      | If exp:exp Then block:block End                   { Luaby::AST::If.new exp, block }
       | For var:var Equals exp:from Comma exp:to Do block:block End { Luaby::AST::ForFromTo.new var, from, to, block }
       | For var:var Equals exp:from Comma exp:to Comma exp:step Do block:block End { Luaby::AST::ForFromToStep.new var, from, to, step, block }
       | For namelist:namelist In explist:explist Do block:block End { Luaby::AST::ForIn.new namelist, explist, block }
-      | Local Function Name:name funcbody:body      { Luaby::AST::LocalFunction.new name, body }
-      | Function funcname:name funcbody:body        { Luaby::AST::Function.new name, body }
-      | Local namelist:names Equals explist:exps    { Luaby::AST::LocalAssignment.new names, exps }
-      | Local namelist:namelist                     { Luaby::AST::LocalDeclaration.new namelist }
+      | Local Function Name:name funcbody:body            { Luaby::AST::LocalFunction.new name, body }
+      | Function funcname:name funcbody:body              { Luaby::AST::Function.new name, body }
+      | Local namelist:names Equals explist:exps          { Luaby::AST::LocalAssignment.new names, exps }
+      | Local namelist:namelist                           { Luaby::AST::LocalDeclaration.new namelist }
       
-funcname = Name 
+funcname  = Name:first (Comma <Name>)*:rest               { [first, *rest] }
 
-root = -
-     | - <string_literal:str> /\Z/ { str }
+varlist = var:first (Comma <var>)*:rest                   { [first, *rest] }
+
+var = prefixexp:table LeftBracket exp:index RightBracket  { Luaby::AST::TableLookup.new table, index }
+    | prefixexp:table Dot Name:name                       { Luaby::AST::TableLookup.new table, Luaby::AST::String.new(index) }
+    | Name:name                                           { Luaby::AST::Variable.new name }
+
+namelist = Name:first (Comma <Name>)*:rest                { [first, *rest] }
+
+explist = exp:first (Comma <exp>)*:rest                   { [first, *rest] }
+
+exp = or_exp:exp                                          { exp }
+
+or_exp  = or_exp:l Or and_exp:r                           { Luaby::AST::Or.new l, r }
+        | and_exp:exp                                     { exp }
+
+and_exp = and_exp:l Or rel_exp:r                          { Luaby::AST::And.new l, r}
+        | rel_exp:exp                                     { exp }
+
+rel_exp     = rel_exp:l   LessThanEqual     concat_exp:r  { Luaby::AST::LessThanEqual.new l, r }
+            | rel_exp:l   LessThan          concat_exp:r  { Luaby::AST::LessThan.new l, r }
+            | rel_exp:l   GreaterThanEqual  concat_exp:r  { Luaby::AST::GreaterThanEqual.new l, r }
+            | rel_exp:l   GreaterThan       concat_exp:r  { Luaby::AST::GreaterThan.new l, r }
+            | rel_exp:l   NotEqual          concat_exp:r  { Luaby::AST::NotEqual.new l, r }
+            | rel_exp:l   DoubleEqual       concat_exp:r  { Luaby::AST::Equal.new l, r }
+            | concat_exp:exp                              { exp }
+
+concat_exp  = add_exp:l   DoubleDot         concat_exp:r  { Luaby::AST::Concat.new l, r }
+            | add_exp:exp                                 { exp }
+
+add_exp     = add_exp:l   Plus              mul_exp:r     { Luaby::AST::Add.new l, r }
+            | add_exp:l   Minus             mul_exp:r     { Luaby::AST::Subtract.new l, r }
+            | mul_exp:exp                                 { exp }
+
+mul_exp     = mul_exp:l   Times             unary_exp:r   { Luaby::AST::Multiply.new l, r }
+            | mul_exp:l   Divide            unary_exp:r   { Luaby::AST::Divide.new l, r }
+            | mul_exp:l   Modulo            unary_exp:r   { Luaby::AST::Modulo.new l, r }
+            | unary_exp:exp                               { exp }
+
+unary_exp   = Not         pow_exp:operand                 { Luaby::AST::Not.new operand }
+            | Count       pow_exp:operand                 { Luaby::AST::Count.new operand }
+            | Minus       pow_exp:operand                 { Luaby::AST::Negate.new operand }
+            | pow_exp:exp                                 { exp }
+
+pow_exp     = pri_exp:l   Power             pow_exp:r     { Luaby::AST::Power.new l, r }
+            | pri_exp:exp                                 { exp }
+
+pri_exp     = Nil                                         { Luaby::AST::Nil.new }
+            | False                                       { Luaby::AST::False.new }
+            | True                                        { Luaby::AST::True.new }
+            | Number:n                                    { Luaby::AST::Number.new n }
+            | string_literal:str                          { str }
+            | TripleDot                                   { Luaby::AST::Nil.new } # @TODO: dunno what ... does as an expression
+            | functiondef
+            | prefixexp
+            | tableconstructor
+
+prefixexp = var:var                                       { var }
+          | LeftParen exp:exp RightParen                  { exp }
+          | functioncall:fcall                            { fcall }
+
+functioncall  = prefixexp:callee args:args                { Luaby::AST::FunctionCall.new callee, args }
+              | prefixexp:obj Colon Name:method args:args { Luaby::AST::MethodCall.new obj, method, args }
+
+args      = LeftParen explist:explist RightParen          { explist }
+          | tableconstructor:arg                          { [arg] }
+          | string_literal:arg                            { [arg] }
+
+functiondef = Function funcbody:func                      { func }
+
+funcbody  = LeftParen parlist:args RightParen block:b End { Luaby::AST::Function.new args, b }
+
+parlist   = namelist:params Comma TripleDot               { Luaby::AST::Parameters.new true, params }
+          | namelist:params                               { Luaby::AST::Parameters.new false, params }
+          | TripleDot                                     { Luaby::AST::Parameters.new true, [] }
+
+tableconstructor = LeftBrace fieldlist:fl RightBrace      { Luaby::AST::TableConstructor.new fl }
+
+fieldlist = field:first (fieldsep <field>)*:rst fieldsep? { [first, *rst] }
+
+fieldsep  = Comma
+          | Semicolon
+
+field   = LeftBracket exp:key RightBracket Equals exp:val { [key, val] }
+        | Name:key Equals exp:val                         { [Luaby::AST::StringLiteral.new(key), val] }
+        | exp:val                                         { [nil, exp] }
+
+root = Shebang? - chunk:chunk /\Z/                        { chunk }
