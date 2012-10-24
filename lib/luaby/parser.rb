@@ -78,7 +78,7 @@ module Luaby
           while peek_token.type == ","
             next_token
             lval = prefix_exp
-            error! "Expected variable, index or member access" unless [AST::Variable, AST::TableLookup].include? lval
+            error! "Expected variable, index or member access" unless [AST::Variable, AST::TableLookup].include? lval.class
             lvals << lval
           end
           expect_token "="
@@ -212,7 +212,7 @@ module Luaby
       if end_delims.include? peek_token.type
         retn = AST::Return.new nil
       else
-        retn = AST::Return.new expression
+        retn = AST::Return.new explist
       end
       next_token if peek_token.type == ";"
       retn
