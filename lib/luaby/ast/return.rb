@@ -6,7 +6,7 @@ class Luaby::AST::Return
   end
   
   def to_lua
-    if explist.any?
+    if explist and explist.any?
       "return #{explist.map(&:to_lua).join ", "}"
     else
       "return"
