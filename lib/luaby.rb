@@ -5,8 +5,11 @@ module Luaby
   require "luaby/lexer"
   require "luaby/ast"
   
+  def self.lex(source)
+    Lexer.new(source).read
+  end
+  
   def self.parse(source)
-    tokens = Lexer.new(source).read
-    Parser.new(tokens).parse
+    Parser.new(lex(source)).parse
   end
 end
