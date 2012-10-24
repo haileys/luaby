@@ -29,6 +29,7 @@ module Luaby::AST
   require "luaby/ast/table_lookup"
   require "luaby/ast/true"
   require "luaby/ast/until"
+  require "luaby/ast/varargs"
   require "luaby/ast/variable"
   require "luaby/ast/while"
 end

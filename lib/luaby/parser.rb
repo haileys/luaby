@@ -152,10 +152,10 @@ module Luaby
           expect_token ","
           step = expression
           body = _do
-          AST::ForFromToStep.new name, from, to, step, body
+          AST::ForFromToStep.new name.value, from, to, step, body
         else  
           body = _do
-          AST::ForFromTo.new name, from, to, body
+          AST::ForFromTo.new name.value, from, to, body
         end
       else
         # for namelist in explist do block end
@@ -362,6 +362,7 @@ module Luaby
       when :number;     AST::Number.new next_token.value
       when :string;     AST::StringLiteral.new next_token.value
       when "function";  next_token; funcbody
+      when "...";       next_token; AST::Varargs.new
       when "{";         table_constructor
       else
         prefix_exp
@@ -404,6 +405,7 @@ module Luaby
       left = if token.type == "("
                exp = expression
                expect_token ")"
+               exp
              else
                AST::Variable.new token.value
              end
