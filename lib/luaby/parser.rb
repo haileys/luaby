@@ -148,13 +148,13 @@ module Luaby
         from = expression
         expect_token ","
         to = expression
-        if peek_token ","
+        if peek_token.type == ","
           expect_token ","
           step = expression
-          body = block
+          body = _do
           AST::ForFromToStep.new name, from, to, step, body
         else  
-          body = block
+          body = _do
           AST::ForFromTo.new name, from, to, body
         end
       else
@@ -163,23 +163,23 @@ module Luaby
         lvals = namelist
         expect_token "in"
         rvals = explist
-        body = block
-        AST::ForIn lvals, rvals, body
+        body = _do
+        AST::ForIn.new lvals, rvals, body
       end
     end
     
     def function_statement
       expect_token "function"
-      names = [expect_token("name").value]
+      names = [expect_token(:name).value]
       is_self_function = false
       while peek_token.type == "."
         expect_token "."
-        names << expect_token("name").value
+        names << expect_token(:name).value
       end
       if peek_token.type == ":"
         expect_token ":"
         is_self_function = true
-        names << expect_token("name").value
+        names << expect_token(:name).value
       end
       func = funcbody
       if is_self_function
@@ -254,6 +254,8 @@ module Luaby
     def parlist
       if peek_token.type == "..."
         AST::Parameters.new true, []
+      elsif peek_token.type == ")"
+        AST::Parameters.new false, []
       else
         params = [expect_token(:name).value]
         while peek_token.type == ","
@@ -291,9 +293,9 @@ module Luaby
     end
     
     def rel_expression
-      opers = { "<=" => AST::LessThanEqual,     "<" => AST::LessThan,
-                ">=" => AST::GreaterThanEqual,  ">" => AST::GreaterThan,
-                "~=" => AST::NotEqual,          "=" => AST::Equal }
+      opers = { "<=" => AST::LessThanEqual,     "<"   => AST::LessThan,
+                ">=" => AST::GreaterThanEqual,  ">"   => AST::GreaterThan,
+                "~=" => AST::NotEqual,          "=="  => AST::Equal }
       left = concat_expression
       while opers.keys.include? peek_token.type
         node = opers[next_token.type]
