@@ -42,7 +42,7 @@ private
   end
   
   def error!(message, offset = 0)
-    raise Luaby::SyntaxError.new message, offset, source
+    raise Luaby::SyntaxError.new message, (source.size - @remaining.size) + offset, source
   end
   
   def make_token(type, value = nil)
