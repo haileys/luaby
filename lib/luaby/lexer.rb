@@ -29,7 +29,7 @@ class Luaby::Lexer
       loop do
         tok = next_token
         tokens << tok
-        break if tok.type == :end
+        break if tok.type == :EOF
       end
     end
   end
@@ -60,7 +60,7 @@ private
   end
 
   def raw_next_token
-    return make_token(:end) if @remaining.empty?
+    return make_token(:EOF) if @remaining.empty?
     
     return lex_string if ["\"", "'"].include? @remaining[0]
     

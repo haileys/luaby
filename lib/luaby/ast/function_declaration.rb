@@ -1,8 +1,8 @@
 class Luaby::AST::FunctionDeclaration
-  attr_reader :name, :params, :body
+  attr_reader :names, :params, :body
   
-  def initialize(name, params, body)
-    @name = name
+  def initialize(names, params, body)
+    @names = names
     @params = params
     @body = body
   end

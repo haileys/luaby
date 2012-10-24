@@ -11,8 +11,9 @@ module Luaby::AST
   require "luaby/ast/function"
   require "luaby/ast/function_call"
   require "luaby/ast/function_declaration"
+  require "luaby/ast/goto"
+  require "luaby/ast/if"
   require "luaby/ast/label"
-  require "luaby/ast/local_assignment"
   require "luaby/ast/local_declaration"
   require "luaby/ast/local_function"
   require "luaby/ast/method_call"
@@ -27,6 +28,7 @@ module Luaby::AST
   require "luaby/ast/table_constructor"
   require "luaby/ast/table_lookup"
   require "luaby/ast/true"
+  require "luaby/ast/until"
   require "luaby/ast/variable"
   require "luaby/ast/while"
 end
