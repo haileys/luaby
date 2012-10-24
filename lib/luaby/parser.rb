@@ -6,7 +6,7 @@ module Luaby
   
     def parse
       @index = -1
-      block :EOF
+      chunk
     end
 
   private
@@ -39,6 +39,10 @@ module Luaby
     end
   
     # ====
+  
+    def chunk
+      AST::Chunk.new block(:EOF).statements
+    end
   
     def block(end_delim = "end")
       block = block_leave_end end_delim
@@ -115,7 +119,7 @@ module Luaby
       expect_token "repeat"
       body = block "until"
       condition = expression
-      AST::Until.new body, condition
+      AST::Repeat.new body, condition
     end
     
     def _if
@@ -181,11 +185,7 @@ module Luaby
         is_self_function = true
         names << expect_token(:name).value
       end
-      func = funcbody
-      if is_self_function
-        func.params.named_args.unshift "self"
-      end
-      AST::FunctionDeclaration.new names, func.params, func.body
+      AST::FunctionDeclaration.new names, is_self_function, funcbody
     end
     
     def local_statement
@@ -193,8 +193,7 @@ module Luaby
       if peek_token.type == "function"
         expect_token "function"
         name = expect_token(:name).value
-        func = funcbody
-        AST::LocalFunction.new name, func.params, func.body
+        AST::LocalFunction.new name, funcbody
       else
         lvals = namelist
         if peek_token.type == "="
@@ -253,6 +252,7 @@ module Luaby
     
     def parlist
       if peek_token.type == "..."
+        next_token
         AST::Parameters.new true, []
       elsif peek_token.type == ")"
         AST::Parameters.new false, []
