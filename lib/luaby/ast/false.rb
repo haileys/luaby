@@ -1,2 +1,2 @@
-class Luaby::AST::Nil
+class Luaby::AST::False
 end

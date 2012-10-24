@@ -5,11 +5,13 @@ class Luaby::Lexer
   OPERATORS = %w(... .. . == ~= <= >= < > :: : = # + - * / % ^ , ; ( ) { } [ ])
   
   TOKENS = [
+    [ :whitespace,  /\A\s+/                     ],
+    [ :comment,     /\A--\[(=*)\[(.|\n)*\]\1\]/ ],
+    [ :comment,     /\A--.*$/                   ],
+    
     *OPERATORS.map { |op| [op, /\A#{Regexp.escape op}/] },
     *KEYWORDS.map { |kw| [kw, /\A#{kw}(?![a-zA-Z0-9_])/ ] },
-    [ :whitespace,  /\A\s+/             ],
-    [ :comment,     /--.*$/             ],
-    [ :comment,     /--\[\[(.|\n)*\]\]/ ],
+    
     [ :number,      /\A([0-9]+(\.[0-9]+)?([eE][0-9]+)?)/, ->md { md[1].to_f }       ],
     [ :number,      /\A0[xX]([0-9a-f]+)/,                 ->md { md[1].to_i.to_f }  ],
     [ :name,        /\A([a-zA-Z_][a-zA-Z0-9_]*)/,         ->md { md[1] }            ],
@@ -19,10 +21,7 @@ class Luaby::Lexer
   
   def initialize(source)
     @source = source
-    @line = 1
-    @col = 1
     @remaining = source
-    remove_shebang
   end
   
   def read
@@ -36,14 +35,6 @@ class Luaby::Lexer
   end
   
 private
-  def remove_shebang
-    if md = /\A#!.*$/.match(@remaining)
-      @remaining = md.post_match
-      @line += 1
-      @col = 1
-    end
-  end
-
   def next_token
     raw_next_token.tap do |tok|
       return next_token if [:comment, :whitespace].include? tok.type
@@ -51,21 +42,11 @@ private
   end
   
   def error!(message, offset = 0)
-    col = @col
-    line = @line
-    extra = @remaining[0, offset]
-    newlines = extra.count "\n"
-    if newlines.zero?
-      col += extra.size
-    else
-      line += newlines
-      col = extra.size - extra.rindex("\n")
-    end
-    raise Luaby::SyntaxError.new message, line, col
+    raise Luaby::SyntaxError.new message, offset, source
   end
   
   def make_token(type, value = nil)
-    Luaby::Token.new type, value, @line, @col, (source.size - @remaining.size), source
+    Luaby::Token.new type, value, (source.size - @remaining.size), source
   end
 
   def raw_next_token
@@ -126,7 +107,7 @@ private
         else
           error! "invalid escape sequence", index
         end
-      elsif char == "\r" or char == "\n" or char == nil # EOF  
+      elsif char == "\r" or char == "\n" or char == nil # EOF
         error! "unfinished string", index
       elsif char == delim
         break
@@ -135,14 +116,10 @@ private
       end
     end
     
+    # account for last "
+    index += 1
+    
     tok = make_token :string, str
-    gobbled = @remaining[0, index]
-    if gobbled.index "\n"
-      @lines += gobbled.count "\n"
-      @col = gobbled.size - gobbled.rindex("\n")
-    else
-      @col += gobbled.size
-    end
     @remaining = @remaining[index..-1]
     tok
   end

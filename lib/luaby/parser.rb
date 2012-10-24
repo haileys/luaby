@@ -27,7 +27,9 @@ module Luaby
     end
   
     def error!(message)
-      raise Luaby::SyntaxError.new(message, token.line, token.column)
+      #require "pry"
+      #pry binding
+      raise Luaby::SyntaxError.new(message, token.offset, token.source)
     end
   
     def expect_token(*types)
@@ -39,24 +41,24 @@ module Luaby
     # ====
   
     def block(end_delim = "end")
-      block = block_leave_end [end_delim]
+      block = block_leave_end end_delim
       expect_token end_delim
       block
     end
     
-    def block_leave_end(end_delims)
+    def block_leave_end(*end_delims)
       statements = []
       until [*end_delims, "return"].include? peek_token.type
         statements << statement
       end
-      statements << _return if peek_token.type == "return"
+      statements << _return(*end_delims) if peek_token.type == "return"
       AST::Block.new statements.compact
     end
   
     def statement
       case peek_token.type
-      when ";";         nil
-      when "break";     AST::Break.new
+      when ";";         next_token; nil
+      when "break";     next_token; AST::Break.new
       when "goto";      goto
       when "do";        _do
       when "while";     _while
@@ -131,7 +133,7 @@ module Luaby
       end
       if peek_token.type == "else"
         expect_token "else"
-        else_body block_leave_end("end")
+        else_body = block_leave_end("end")
       end
       expect_token "end"
       AST::If.new conditions, bodies, else_body
@@ -203,6 +205,17 @@ module Luaby
           AST::LocalDeclaration.new lvals, []
         end
       end
+    end
+    
+    def _return(*end_delims)
+      expect_token "return"
+      if end_delims.include? peek_token.type
+        retn = AST::Return.new nil
+      else
+        retn = AST::Return.new expression
+      end
+      next_token if peek_token.type == ";"
+      retn
     end
     
     def label
@@ -292,6 +305,7 @@ module Luaby
     def concat_expression
       left = add_expression
       if peek_token.type == ".."
+        next_token
         AST::Concat.new left, concat_expression
       else
         left
@@ -320,9 +334,9 @@ module Luaby
     
     def unary_expression
       case peek_token.type
-      when "not"; AST::Not.new    unary_expression
-      when "-";   AST::Negate.new unary_expression
-      when "#";   AST::Count.new  unary_expression
+      when "not"; next_token; AST::Not.new    unary_expression
+      when "-";   next_token; AST::Negate.new unary_expression
+      when "#";   next_token; AST::Count.new  unary_expression
       else
         power_expression
       end
@@ -331,7 +345,8 @@ module Luaby
     def power_expression
       left = primary_expression
       if peek_token.type == ".."
-        AST::Concat.new left, power_expression
+        next_token
+        AST::Power.new left, power_expression
       else
         left
       end
@@ -347,8 +362,7 @@ module Luaby
       when "function";  next_token; funcbody
       when "{";         table_constructor
       else
-        # force error
-        expect_token "nil", "true", "false", "function", "{", :number, :string
+        prefix_exp
       end
     end
     
@@ -371,8 +385,9 @@ module Luaby
         else
           pairs << [nil, expression]
         end
-        expect_token ",", ";", "}"
+        expect_token ",", ";" unless peek_token.type == "}"
       end
+      expect_token "}"
       AST::TableConstructor.new pairs
     end
     
@@ -384,7 +399,8 @@ module Luaby
              else
                AST::Variable.new token.value
              end
-      while ["(", ":", ".", "[" "{", :string].include? peek_token.type
+      
+      while ["(", ":", ".", "[", "{", :string].include? peek_token.type
         case peek_token.type
         when "(", "{", :string
           left = AST::FunctionCall.new left, args
@@ -406,7 +422,7 @@ module Luaby
     
     def args
       expect_token "{", "(", :string
-      if peek_token.type == "{"
+      if token.type == "{"
         prev_token
         [table_constructor]
       elsif token.type == :string
