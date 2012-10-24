@@ -22,6 +22,7 @@ class Luaby::Lexer
     @line = 1
     @col = 1
     @remaining = source
+    remove_shebang
   end
   
   def read
@@ -34,7 +35,15 @@ class Luaby::Lexer
     end
   end
   
-private  
+private
+  def remove_shebang
+    if md = /\A#!.*$/.match(@remaining)
+      @remaining = md.post_match
+      @line += 1
+      @col = 1
+    end
+  end
+
   def next_token
     raw_next_token.tap do |tok|
       return next_token if [:comment, :whitespace].include? tok.type

@@ -346,6 +346,9 @@ module Luaby
       when :string;     AST::StringLiteral.new next_token.value
       when "function";  next_token; funcbody
       when "{";         table_constructor
+      else
+        # force error
+        expect_token "nil", "true", "false", "function", "{", :number, :string
       end
     end
     
@@ -373,7 +376,7 @@ module Luaby
       AST::TableConstructor.new pairs
     end
     
-    def prefix_expression
+    def prefix_exp
       expect_token :name, "("
       left = if token.type == "("
                exp = expression
@@ -409,9 +412,14 @@ module Luaby
       elsif token.type == :string
         [AST::StringLiteral.new(token.value)]
       else
-        args = explist
-        expect_token ")"
-        args
+        if peek_token.type == ")"
+          next_token
+          []
+        else
+          args = explist
+          expect_token ")"
+          args
+        end
       end
     end
   end
