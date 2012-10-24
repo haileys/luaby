@@ -346,7 +346,7 @@ module Luaby
     
     def power_expression
       left = primary_expression
-      if peek_token.type == ".."
+      if peek_token.type == "^"
         next_token
         AST::Power.new left, power_expression
       else
