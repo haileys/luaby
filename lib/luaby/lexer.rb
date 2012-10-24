@@ -8,6 +8,7 @@ class Luaby::Lexer
     [ :whitespace,  /\A\s+/                     ],
     [ :comment,     /\A--\[(=*)\[(.|\n)*\]\1\]/ ],
     [ :comment,     /\A--.*$/                   ],
+    [ :string,      /\A\[(=*)\[((.|\n)*?)\]\1\]/,         ->md { md[2] }            ],
     
     *OPERATORS.map { |op| [op, /\A#{Regexp.escape op}/] },
     *KEYWORDS.map { |kw| [kw, /\A#{kw}(?![a-zA-Z0-9_])/ ] },
@@ -108,7 +109,7 @@ private
           error! "invalid escape sequence", index
         end
       elsif char == "\r" or char == "\n" or char == nil # EOF
-        error! "unfinished string", index
+        error! "unfinished string", index - 1
       elsif char == delim
         break
       else
