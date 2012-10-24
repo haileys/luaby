@@ -8,4 +8,8 @@ class Luaby::AST::ForFromToStep
     @step = step
     @block = block
   end
+  
+  def to_lua
+    "for #{var} = #{from.to_lua}, #{to.to_lua}, #{step.to_lua} do\n#{block.to_lua}\nend"
+  end
 end

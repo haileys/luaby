@@ -5,6 +5,8 @@ module Luaby
   require "luaby/lexer"
   require "luaby/ast"
   
+  INDENT = "    "
+  
   def self.lex(source)
     Lexer.new(source).read
   end

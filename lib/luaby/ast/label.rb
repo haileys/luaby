@@ -4,4 +4,8 @@ class Luaby::AST::Label
   def initialize(name)
     @name = name
   end
+  
+  def to_lua
+    "::#{name}::"
+  end
 end

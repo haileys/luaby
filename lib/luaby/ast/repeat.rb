@@ -5,4 +5,8 @@ class Luaby::AST::Repeat
     @block = block
     @exp = exp
   end
+  
+  def to_lua
+    "repeat\n#{block.to_lua}\nuntil #{exp.to_lua}"
+  end
 end

@@ -4,4 +4,8 @@ class Luaby::AST::Number
   def initialize(number)
     @number = number
   end
+  
+  def to_lua
+    "#{number}"
+  end
 end

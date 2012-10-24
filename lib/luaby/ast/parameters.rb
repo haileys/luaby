@@ -9,4 +9,13 @@ class Luaby::AST::Parameters
   def variadic?
     variadic
   end
+  
+  def to_lua
+    if named_args.any?
+      str = "#{named_args.join(", ")}"
+      str << ", ..." if variadic?
+    else
+      "..."
+    end
+  end
 end

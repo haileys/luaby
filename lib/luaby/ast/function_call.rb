@@ -5,4 +5,16 @@ class Luaby::AST::FunctionCall
     @function = function
     @args = args
   end
+  
+  def prefix_exp?
+    true
+  end
+  
+  def to_lua
+    if function.respond_to? :prefix_exp? and function.prefix_exp?
+      "#{function.to_lua}(#{args.map(&:to_lua).join ", "})"
+    else
+      "(#{function.to_lua})(#{args.map(&:to_lua).join ", "})"
+    end
+  end
 end

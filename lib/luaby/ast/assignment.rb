@@ -5,4 +5,10 @@ class Luaby::AST::Assignment
     @left_vals = [*left_vals]
     @right_vals = [*right_vals]
   end
+  
+  def to_lua
+    left = left_vals.map(&:to_lua).join(", ")
+    right = right_vals.map(&:to_lua).join(", ")
+    "#{left} = #{right}"
+  end
 end

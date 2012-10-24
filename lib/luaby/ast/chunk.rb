@@ -1,4 +1,4 @@
-class Luaby::AST::Block
+class Luaby::AST::Chunk
   attr_reader :statements
   
   def initialize(statements)
@@ -6,6 +6,6 @@ class Luaby::AST::Block
   end
   
   def to_lua
-    statements.map(&:to_lua).join("\n").lines.map { |x| "#{Luaby::INDENT}#{x}" }.join
+    statements.map(&:to_lua).join "\n"
   end
 end

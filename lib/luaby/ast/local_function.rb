@@ -1,9 +1,12 @@
 class Luaby::AST::LocalFunction
-  attr_reader :name, :params, :body
+  attr_reader :name, :funcbody
   
-  def initialize(name, params, body)
+  def initialize(name, funcbody)
     @name = name
-    @params = params
-    @body = body
+    @funcbody = funcbody
+  end
+  
+  def to_lua
+    "local function #{name}#{funcbody.to_lua}"
   end
 end

@@ -5,4 +5,8 @@ class Luaby::AST::Function
     @params = params
     @body = body
   end
+  
+  def to_lua
+    "(#{params.to_lua})\n#{body.to_lua}\nend"
+  end
 end

@@ -4,4 +4,12 @@ class Luaby::AST::Variable
   def initialize(name)
     @name = name
   end
+  
+  def prefix_exp?
+    true
+  end
+  
+  def to_lua
+    name
+  end
 end
