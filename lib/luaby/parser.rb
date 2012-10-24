@@ -380,10 +380,16 @@ module Luaby
           value = expression
           pairs << [key, value]
         elsif peek_token.type == :name
-          key = AST::StringLiteral.new next_token.value
-          expect_token "="
-          value = expression
-          pairs << [key, value]
+          next_token
+          if peek_token.type == "="
+            key = AST::StringLiteral.new token.value
+            expect_token "="
+            value = expression
+            pairs << [key, value]
+          else
+            prev_token
+            pairs << [nil, expression]
+          end
         else
           pairs << [nil, expression]
         end
