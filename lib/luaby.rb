@@ -4,6 +4,7 @@ module Luaby
   require "luaby/token"
   require "luaby/lexer"
   require "luaby/ast"
+  require "luaby/compilers"
   
   INDENT = "    "
   

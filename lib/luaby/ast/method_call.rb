@@ -13,9 +13,9 @@ class Luaby::AST::MethodCall
   
   def to_lua
     if receiver.respond_to? :prefix_exp? and receiver.prefix_exp?
-      "#{receiver.to_lua}:#{method}(#{args.map(&:to_lua).join ", "})"
+      "#{receiver.to_lua}:#{method}(#{args.to_lua})"
     else
-      "(#{receiver.to_lua}):#{method}(#{args.map(&:to_lua).join ", "})"
+      "(#{receiver.to_lua}):#{method}(#{args.to_lua})"
     end
   end
 end

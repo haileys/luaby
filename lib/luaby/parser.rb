@@ -201,7 +201,7 @@ module Luaby
           rvals = explist
           AST::LocalDeclaration.new lvals, rvals
         else
-          AST::LocalDeclaration.new lvals, []
+          AST::LocalDeclaration.new lvals, AST::ExpList.new([])
         end
       end
     end
@@ -234,12 +234,12 @@ module Luaby
     end
     
     def explist
-      names = [expression]
+      exps = [expression]
       while peek_token.type == ","
         expect_token ","
-        names << expression
+        exps << expression
       end
-      names
+      AST::ExpList.new exps
     end
     
     def funcbody
@@ -434,13 +434,13 @@ module Luaby
       expect_token "{", "(", :string
       if token.type == "{"
         prev_token
-        [table_constructor]
+        AST::ExpList.new [table_constructor]
       elsif token.type == :string
-        [AST::StringLiteral.new(token.value)]
+        AST::ExpList.new [AST::StringLiteral.new(token.value)]
       else
         if peek_token.type == ")"
           next_token
-          []
+          AST::ExpList.new []
         else
           args = explist
           expect_token ")"

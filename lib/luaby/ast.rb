@@ -4,6 +4,7 @@ module Luaby::AST
   require "luaby/ast/block"
   require "luaby/ast/break"
   require "luaby/ast/chunk"
+  require "luaby/ast/exp_list"
   require "luaby/ast/false"
   require "luaby/ast/for_from_to"
   require "luaby/ast/for_from_to_step"

@@ -20,7 +20,7 @@ class Luaby::AST::TableConstructor
     key, value = pair
     if key
       if key.is_a? Luaby::AST::StringLiteral and key.valid_name?
-        "#{key} = #{value}"
+        "#{key.string} = #{value.to_lua}"
       else
         "[#{key.to_lua}] = #{value}"
       end

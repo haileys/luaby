@@ -1,13 +1,13 @@
 class Luaby::AST::ForIn
-  attr_reader :namelist, :explist, :block
+  attr_reader :namelist, :exp_list, :block
   
-  def initialize(namelist, explist, block)
+  def initialize(namelist, exp_list, block)
     @namelist = namelist
-    @explist = explist
+    @exp_list = exp_list
     @block = block
   end
   
   def to_lua
-    "for #{namelist.join ", "} in #{explist.map(&:to_lua).join ", "} do\n#{block.to_lua}\nend"
+    "for #{namelist.join ", "} in #{exp_list.to_lua} do\n#{block.to_lua}\nend"
   end
 end

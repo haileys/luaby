@@ -6,7 +6,7 @@ class Luaby::AST::StringLiteral
   end
   
   def valid_name?
-    string =~ /\A[a-zA-Z0-9][a-zA-Z0-9_]*\z/
+    string =~ /\A[a-zA-Z_][a-zA-Z0-9_]*\z/
   end
   
   def to_lua

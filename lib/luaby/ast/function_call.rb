@@ -12,9 +12,9 @@ class Luaby::AST::FunctionCall
   
   def to_lua
     if function.respond_to? :prefix_exp? and function.prefix_exp?
-      "#{function.to_lua}(#{args.map(&:to_lua).join ", "})"
+      "#{function.to_lua}(#{args.to_lua})"
     else
-      "(#{function.to_lua})(#{args.map(&:to_lua).join ", "})"
+      "(#{function.to_lua})(#{args.to_lua})"
     end
   end
 end

@@ -1,16 +1,15 @@
 class Luaby::AST::LocalDeclaration
-  attr_reader :namelist, :explist
+  attr_reader :namelist, :exp_list
   
-  def initialize(namelist, explist)
+  def initialize(namelist, exp_list)
     @namelist = namelist
-    @explist = explist
+    @exp_list = exp_list
   end
   
   def to_lua
     left = namelist.join(", ")
-    if explist.any?
-      right = explist.map(&:to_lua).join(", ")
-      "local #{left} = #{right}"
+    if exp_list.expressions.any?
+      "local #{left} = #{exp_list.to_lua}"
     else
       "local #{left}"
     end
