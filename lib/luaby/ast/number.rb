@@ -6,6 +6,10 @@ class Luaby::AST::Number
   end
   
   def to_lua
-    "#{number}"
+    if number % 1.0 == 0.0
+      number.to_i.to_s
+    else
+      number.to_s
+    end
   end
 end
