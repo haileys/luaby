@@ -1,12 +1,11 @@
 class Luaby::AST::AnonymousFunction
-  attr_reader :params, :body
+  attr_reader :func
 
-  def initialize(params, body)
-    @params = params
-    @body = body
+  def initialize(func)
+    @func = func
   end
 
   def to_lua
-    "function (#{params.to_lua})\n#{body.to_lua.lines.map { |x| "#{Luaby::INDENT}#{x}" }.join}\nend"
+    "function #{func.to_lua}"
   end
 end

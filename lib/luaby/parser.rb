@@ -250,14 +250,6 @@ module Luaby
       AST::Function.new params, body
     end
 
-    def anonfuncbody
-      expect_token "("
-      params = parlist
-      expect_token ")"
-      body = block
-      AST::AnonymousFunction.new params, body
-    end
-
     def parlist
       if peek_token.type == "..."
         next_token
@@ -369,7 +361,7 @@ module Luaby
       when "false";     next_token; AST::False.new
       when :number;     AST::Number.new next_token.value
       when :string;     AST::StringLiteral.new next_token.value
-      when "function";  next_token; anonfuncbody
+      when "function";  next_token; AST::AnonymousFunction.new funcbody
       when "...";       next_token; AST::Varargs.new
       when "{";         table_constructor
       else
