@@ -1,30 +1,31 @@
 class Luaby::Lexer
   KEYWORDS = %w(and break do else elseif end false for function goto if in
                 local nil not or repeat return then true until while)
-  
+
   OPERATORS = %w(... .. . == ~= <= >= < > :: : = # + - * / % ^ , ; ( ) { } [ ])
-  
+
   TOKENS = [
     [ :whitespace,  /\A\s+/                     ],
     [ :comment,     /\A--\[(=*)\[(.|\n)*\]\1\]/ ],
     [ :comment,     /\A--.*$/                   ],
     [ :string,      /\A\[(=*)\[((.|\n)*?)\]\1\]/,         ->md { md[2] }            ],
-    
+    [ :number,      /\A((\.[0-9]+)([eE][0-9]+)?)/,        ->md { md[1].to_f }       ],
+
     *OPERATORS.map { |op| [op, /\A#{Regexp.escape op}/] },
     *KEYWORDS.map { |kw| [kw, /\A#{kw}(?![a-zA-Z0-9_])/ ] },
-    
+
     [ :number,      /\A([0-9]+(\.[0-9]+)?([eE][0-9]+)?)/, ->md { md[1].to_f }       ],
     [ :number,      /\A0[xX]([0-9a-f]+)/,                 ->md { md[1].to_i.to_f }  ],
     [ :name,        /\A([a-zA-Z_][a-zA-Z0-9_]*)/,         ->md { md[1] }            ],
   ]
-  
+
   attr_reader :source
-  
+
   def initialize(source)
     @source = source
     @remaining = source
   end
-  
+
   def read
     [].tap do |tokens|
       loop do
@@ -34,27 +35,27 @@ class Luaby::Lexer
       end
     end
   end
-  
+
 private
   def next_token
     raw_next_token.tap do |tok|
       return next_token if [:comment, :whitespace].include? tok.type
     end
   end
-  
+
   def error!(message, offset = 0)
     raise Luaby::SyntaxError.new message, (source.size - @remaining.size) + offset, source
   end
-  
+
   def make_token(type, value = nil)
     Luaby::Token.new type, value, (source.size - @remaining.size), source
   end
 
   def raw_next_token
     return make_token(:EOF) if @remaining.empty?
-    
+
     return lex_string if ["\"", "'"].include? @remaining[0]
-    
+
     TOKENS.each do |name, re, lambda|
       if md = re.match(@remaining)
         val = lambda[md] if lambda
@@ -63,20 +64,20 @@ private
         return tok
       end
     end
-    
+
     error! "Illegal character '#{@remaining[0]}'"
   end
-  
+
   def lex_string
     delim = @remaining[0]
     str = ""
     in_escape = false
     in_zap = false
-    
+
     escapes = { "a" => "\a", "b" => "\b", "f" => "\f", "n" => "\n", "r" => "\r",
                 "t" => "\t", "v" => "\v", "\n" => "\n", "\r" => "\n",
                 '"' => "\"", "'" => "'", "\\" => "\\" }
-                
+
     index = 0
     loop do
       char = @remaining[index += 1]
@@ -116,10 +117,10 @@ private
         str << char
       end
     end
-    
+
     # account for last "
     index += 1
-    
+
     tok = make_token :string, str
     @remaining = @remaining[index..-1]
     tok

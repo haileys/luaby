@@ -3,7 +3,7 @@ module Luaby
     def initialize(tokens)
       @tokens = tokens
     end
-  
+
     def parse
       @index = -1
       chunk
@@ -13,43 +13,43 @@ module Luaby
     def prev_token
       @tokens[@index -= 1]
     end
-  
+
     def next_token
       @tokens[@index += 1]
     end
-  
+
     def peek_token
       @tokens[@index + 1]
     end
-  
+
     def token
       @tokens[@index]
     end
-  
+
     def error!(message)
       #require "pry"
       #pry binding
       raise Luaby::SyntaxError.new(message, token.offset, token.source)
     end
-  
+
     def expect_token(*types)
       next_token.tap do |tok|
         error! "Expected #{types.map(&:inspect).join ", "}; got #{tok.type.inspect}" unless types.include? tok.type
       end
     end
-  
+
     # ====
-  
+
     def chunk
       AST::Chunk.new block(:EOF).statements
     end
-  
+
     def block(end_delim = "end")
       block = block_leave_end end_delim
       expect_token end_delim
       block
     end
-    
+
     def block_leave_end(*end_delims)
       statements = []
       until [*end_delims, "return"].include? peek_token.type
@@ -58,7 +58,7 @@ module Luaby
       statements << _return(*end_delims) if peek_token.type == "return"
       AST::Block.new statements.compact
     end
-  
+
     def statement
       case peek_token.type
       when ";";         next_token; nil
@@ -97,31 +97,31 @@ module Luaby
         end
       end
     end
-    
+
     def goto
       expect_token "goto"
       AST::Goto.new expect_token(:name).value
     end
-    
+
     def _do
       expect_token "do"
       block
     end
-    
+
     def _while
       expect_token "while"
       condition = expression
       body = _do
       AST::While.new condition, body
     end
-    
+
     def repeat
       expect_token "repeat"
       body = block "until"
       condition = expression
       AST::Repeat.new body, condition
     end
-    
+
     def _if
       conditions = []
       bodies = []
@@ -142,7 +142,7 @@ module Luaby
       expect_token "end"
       AST::If.new conditions, bodies, else_body
     end
-    
+
     def _for
       expect_token "for"
       name = expect_token :name
@@ -157,7 +157,7 @@ module Luaby
           step = expression
           body = _do
           AST::ForFromToStep.new name.value, from, to, step, body
-        else  
+        else
           body = _do
           AST::ForFromTo.new name.value, from, to, body
         end
@@ -171,7 +171,7 @@ module Luaby
         AST::ForIn.new lvals, rvals, body
       end
     end
-    
+
     def function_statement
       expect_token "function"
       names = [expect_token(:name).value]
@@ -187,7 +187,7 @@ module Luaby
       end
       AST::FunctionDeclaration.new names, is_self_function, funcbody
     end
-    
+
     def local_statement
       expect_token "local"
       if peek_token.type == "function"
@@ -205,7 +205,7 @@ module Luaby
         end
       end
     end
-    
+
     def _return(*end_delims)
       expect_token "return"
       if end_delims.include? peek_token.type
@@ -216,14 +216,14 @@ module Luaby
       next_token if peek_token.type == ";"
       retn
     end
-    
+
     def label
       expect_token "::"
       name = expect_token(:name).value
       expect_token "::"
       AST::Label.new name
     end
-    
+
     def namelist
       names = [expect_token(:name).value]
       while peek_token.type == ","
@@ -232,7 +232,7 @@ module Luaby
       end
       names
     end
-    
+
     def explist
       exps = [expression]
       while peek_token.type == ","
@@ -241,7 +241,7 @@ module Luaby
       end
       AST::ExpList.new exps
     end
-    
+
     def funcbody
       expect_token "("
       params = parlist
@@ -249,7 +249,7 @@ module Luaby
       body = block
       AST::Function.new params, body
     end
-    
+
     def parlist
       if peek_token.type == "..."
         next_token
@@ -269,11 +269,11 @@ module Luaby
         AST::Parameters.new false, params
       end
     end
-    
+
     def expression
       or_expression
     end
-    
+
     def or_expression
       left = and_expression
       while peek_token.type == "or"
@@ -282,7 +282,7 @@ module Luaby
       end
       left
     end
-    
+
     def and_expression
       left = rel_expression
       while peek_token.type == "and"
@@ -291,7 +291,7 @@ module Luaby
       end
       left
     end
-    
+
     def rel_expression
       opers = { "<=" => AST::LessThanEqual,     "<"   => AST::LessThan,
                 ">=" => AST::GreaterThanEqual,  ">"   => AST::GreaterThan,
@@ -303,7 +303,7 @@ module Luaby
       end
       left
     end
-    
+
     def concat_expression
       left = add_expression
       if peek_token.type == ".."
@@ -313,7 +313,7 @@ module Luaby
         left
       end
     end
-    
+
     def add_expression
       opers = { "+" => AST::Add, "-" => AST::Subtract }
       left = mul_expression
@@ -323,7 +323,7 @@ module Luaby
       end
       left
     end
-    
+
     def mul_expression
       opers = { "*" => AST::Multiply, "/" => AST::Divide, "%" => AST::Modulo }
       left = unary_expression
@@ -333,7 +333,7 @@ module Luaby
       end
       left
     end
-    
+
     def unary_expression
       case peek_token.type
       when "not"; next_token; AST::Not.new    unary_expression
@@ -343,7 +343,7 @@ module Luaby
         power_expression
       end
     end
-    
+
     def power_expression
       left = primary_expression
       if peek_token.type == "^"
@@ -353,7 +353,7 @@ module Luaby
         left
       end
     end
-    
+
     def primary_expression
       case peek_token.type
       when "nil";       next_token; AST::Nil.new
@@ -361,14 +361,14 @@ module Luaby
       when "false";     next_token; AST::False.new
       when :number;     AST::Number.new next_token.value
       when :string;     AST::StringLiteral.new next_token.value
-      when "function";  next_token; funcbody
+      when "function";  next_token; AST::AnonymousFunction.new funcbody
       when "...";       next_token; AST::Varargs.new
       when "{";         table_constructor
       else
         prefix_exp
       end
     end
-    
+
     def table_constructor
       expect_token "{"
       pairs = []
@@ -399,7 +399,7 @@ module Luaby
       expect_token "}"
       AST::TableConstructor.new pairs
     end
-    
+
     def prefix_exp
       expect_token :name, "("
       left = if token.type == "("
@@ -409,7 +409,7 @@ module Luaby
              else
                AST::Variable.new token.value
              end
-      
+
       while ["(", ":", ".", "[", "{", :string].include? peek_token.type
         case peek_token.type
         when "(", "{", :string
@@ -429,7 +429,7 @@ module Luaby
       end
       left
     end
-    
+
     def args
       expect_token "{", "(", :string
       if token.type == "{"

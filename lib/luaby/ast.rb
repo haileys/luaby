@@ -1,4 +1,5 @@
 module Luaby::AST
+  require "luaby/ast/anonymous_function"
   require "luaby/ast/assignment"
   require "luaby/ast/bin_op"
   require "luaby/ast/block"
